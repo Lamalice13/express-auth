@@ -5,7 +5,9 @@ const session = require("express-session");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 
-const pool = new Pool({});
+const pool = new Pool({
+  connectionString: "posgresql://postgres:aqpm@localhost:5432/users_auth",
+});
 
 const app = express();
 app.set("views", path.join(__dirname, "views"));
@@ -16,6 +18,20 @@ app.use(passport.session());
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => res.render("index"));
+app
+  .route("/sign-up")
+  .get((req, res) => res.render("sign-up-form"))
+  .post(async (req, res, next) => {
+    try {
+      await pool.query(
+        "INSERT INTO users (username, password) VALUES ($1, $2)",
+        [req.body.username, req.body.password]
+      );
+      res.redirect("/");
+    } catch (err) {
+      return next(err);
+    }
+  });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, (error) => {
