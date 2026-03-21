@@ -4,6 +4,7 @@ const { Pool } = require("pg");
 const session = require("express-session");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
+const bcrypt = require("bcryptjs");
 
 const app = express();
 app.use(session({ secret: "cats", resave: false, saveUninitialized: true }));
@@ -28,9 +29,10 @@ app
   .get((req, res) => res.render("sign-up-form"))
   .post(async (req, res, next) => {
     try {
+      const hashedassword = await bcrypt.hash(req.body.password, 10);
       await pool.query(
         "INSERT INTO users (username, password) VALUES ($1, $2)",
-        [req.body.username, req.body.password]
+        [req.body.username, hashedassword]
       );
       res.redirect("/");
     } catch (err) {
@@ -52,7 +54,9 @@ passport.use(
         return done(null, false, { message: "Incorrect username !" });
       }
 
-      if (user.password !== password) {
+      const match = await bcrypt.compare(password, user.password);
+
+      if (!match) {
         return done(null, false, { message: "Incorrect password !" });
       }
 
@@ -84,12 +88,6 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
-app.use((req, res, next) => {
-  res.locals.currentUser = req.user;
-  next();
-});
-app.get("/", (req, res) => res.render("index"));
-
 app.post(
   "/log-in",
   passport.authenticate("local", {
@@ -97,6 +95,13 @@ app.post(
     failureRedirect: "/",
   })
 );
+
+app.use((req, res, next) => {
+  res.locals.currentUser = req.user;
+  next();
+});
+
+app.get("/", (req, res) => res.render("index"));
 
 app.get("/log-out", (req, res, next) => {
   req.logout((err) => {
