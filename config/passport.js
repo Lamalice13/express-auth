@@ -47,14 +47,14 @@ passport.serializeUser((user, done) => {
   done(null, user.id);
 });
 
-// Grab the user id from the session and find the user with that id
+// Find the user with that id
 passport.deserializeUser(async (id, done) => {
   try {
     const { rows } = await pool.query("SELECT * FROM users WHERE id = $1", [
       id,
     ]);
     const user = rows[0];
-    // Store the user in
+    // Return the specific user
     done(null, user);
   } catch (err) {
     done(err);

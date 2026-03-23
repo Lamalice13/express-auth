@@ -31,9 +31,9 @@ app.use(
 // Execute the passport file, we don't need the return of it
 require("./config/passport");
 
-// read req.session.passport.user which is the user id
+// After login
+// Read req.session.passport.user which is the user id
 // Call deserializeUser() with this id, which then do the query db, get the user from the done(user) and populate req.user.
-// Allow persistent session.
 app.use(passport.session());
 
 app.use((req, res, next) => {
