@@ -32,7 +32,8 @@ app.use(
 require("./config/passport");
 
 // read req.session.passport.user which is the user id
-// Call deserializeUser() with this id, which then do the query db, get the user from the done(user) and populate req.user
+// Call deserializeUser() with this id, which then do the query db, get the user from the done(user) and populate req.user.
+// Allow persistent session.
 app.use(passport.session());
 
 app.use((req, res, next) => {
@@ -69,8 +70,10 @@ app
 
 app.post(
   "/log-in",
-  // Call the verifyRequest callback, which is going to return either a user if the user gave the correct credentials, or false in cas of login failure.
-  // If login is successfull give the user to the serialize() function, which then populate req.session.passport object with the user id
+  // Middleware called in case of login.
+  // Call our strategy, which will call the verifyRequest callback, which is going to return either a user if the user gave the correct credentials, or false in cas of login failure.
+  // If the strategy succeed (= if login is successfull), this will set req.user. This middleware also adds helper functions to the req object: req.login(), req.logout(), and req.isAuthenticated().
+  // Call serialize() function with the user, which then populate req.session.passport.user with the user id
   // express-session will detect that req.session has been modified and will update the row on the session table where the session id sent by the browser is.
   passport.authenticate("local", {
     successRedirect: "/",

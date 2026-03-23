@@ -38,11 +38,12 @@ const verifyCallback = async (username, password, done) => {
 // The strategy is only there to verify the user exists in the db and the user credentials match.
 const strategy = new LocalStrategy(verifyCallback);
 
-// Passport will retrieve by default the form data value with the keys "username" and "password", in the req.body. And passes it to the verifyCallback
+// Configure the strategy the passport will use, called by passport.authentificate()
 passport.use(strategy);
 
-// Put the user id into the session store in the passport obj
+// Put the user id into the session store in the passport obj whenever there's a log in
 passport.serializeUser((user, done) => {
+  // It's here we decide what we store (here user.id)
   done(null, user.id);
 });
 
@@ -53,6 +54,7 @@ passport.deserializeUser(async (id, done) => {
       id,
     ]);
     const user = rows[0];
+    // Store the user in
     done(null, user);
   } catch (err) {
     done(err);
